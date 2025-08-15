@@ -2,14 +2,12 @@ name: Telegram Admiral Monitor
 
 on:
   schedule:
-    - cron: "0 */2 * * *"   # запуск каждые 2 часа
-  workflow_dispatch: {}      # ручной запуск из Actions
+    - cron: '0 */2 * * *'   # каждые 2 часа
+  workflow_dispatch:
 
 jobs:
   run:
     runs-on: ubuntu-latest
-    env:
-      PYTHONUNBUFFERED: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install deps
         run: |
@@ -27,26 +25,6 @@ jobs:
       - name: Create service_account.json
         run: |
           echo '${{ secrets.SERVICE_ACCOUNT_JSON }}' > service_account.json
-
-      - name: Quick env check
-        shell: bash
-        env:
-          API_ID: ${{ secrets.API_ID }}
-          API_HASH: ${{ secrets.API_HASH }}
-          TELETHON_SESSION: ${{ secrets.TELETHON_SESSION }}
-          GOOGLE_SHEET_NAME: ${{ secrets.GSHEET_NAME }}
-          TZ: ${{ secrets.TZ }}
-        run: |
-          set -euo pipefail
-          echo "Has API_ID?            $([ -n "${API_ID}" ] && echo YES || echo NO)"
-          echo "Has API_HASH?          $([ -n "${API_HASH}" ] && echo YES || echo NO)"
-          echo "Has TELETHON_SESSION?  $([ -n "${TELETHON_SESSION}" ] && echo YES || echo NO)"
-          echo "Has GSHEET_NAME?       $([ -n "${GOOGLE_SHEET_NAME}" ] && echo YES || echo NO)"
-          echo "Has TZ?                $([ -n "${TZ}" ] && echo YES || echo NO)"
-          python -c "import json,sys,pathlib; p=pathlib.Path('service_account.json'); \
-import traceback; \
-try: d=json.loads(p.read_text()); print('Loaded service_account.json OK'); print('Service account email:', d.get('client_email','<missing>')) \
-except Exception as e: print('FAILED to load service_account.json:', e); sys.exit(1)"
 
       - name: Run monitor
         env:
