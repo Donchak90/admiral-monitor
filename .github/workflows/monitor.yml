@@ -62,3 +62,4 @@ PY
           python -u monitor_telegram_to_sheets.py
 EOF
 
+# force trigger
