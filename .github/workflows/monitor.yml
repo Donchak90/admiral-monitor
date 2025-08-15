@@ -1,3 +1,5 @@
+
+cat > .github/workflows/monitor.yml <<'EOF'
 name: Telegram Admiral Monitor
 
 on:
@@ -58,5 +60,5 @@ PY
         run: |
           set -euo pipefail
           python -u monitor_telegram_to_sheets.py
-
+EOF
 
