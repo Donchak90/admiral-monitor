@@ -18,26 +18,24 @@ TZ       = os.getenv("TZ", "Europe/Amsterdam")
 SHEET    = os.getenv("GOOGLE_SHEET_NAME", "Admiral Mentions")
 
 # Авторизация в Google Sheets
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive",  # нужен для gc.open(SHEET) по названию
+]
 creds = Credentials.from_service_account_file("service_account.json", scopes=SCOPES)
 gc = gspread.authorize(creds)
 sheet = gc.open(SHEET).sheet1
 
-# Авторизация в Telegram
 client = TelegramClient(StringSession(SESSION), API_ID, API_HASH)
 
-# Список каналов и ресурсов для мониторинга
 channels = [
     "@sehockey", "@vbros_po_bortu", "@khl_official_telegram", "@arena_breda",
     "@besprokata", "@derzhiperedachu", "@hockeywithroman", "@erykalov_s_shaiboi"
 ]
-# Можно добавить ссылки на сайты для парсинга, если нужно
 
-# Ключевые слова
 keywords = [
     "Адмирал", "хоккейная команда Адмирал", "хоккейный клуб Адмирал"
 ]
-# Здесь можно автоматически добавить имена игроков и тренеров
 
 def contains_keywords(text):
     return any(kw.lower() in text.lower() for kw in keywords)
@@ -45,9 +43,8 @@ def contains_keywords(text):
 async def main():
     tz = pytz.timezone(TZ)
     now = datetime.now(tz)
-    since = now - timedelta(days=1)  # За последние сутки
+    since = now - timedelta(days=1)
     to_add = []
-    state = {}
 
     for ch in channels:
         try:
@@ -81,7 +78,7 @@ async def main():
             print(f"Ошибка на канале {ch}: {e}")
             continue
 
-    # пачками, чтобы не упереться в лимиты Google Sheets API
+    # пачками, чтобы не упереться в лимиты
     for i in range(0, len(to_add), 300):
         batch = to_add[i:i+300]
         try:
@@ -93,4 +90,3 @@ async def main():
 if __name__ == "__main__":
     with client:
         client.loop.run_until_complete(main())
-
