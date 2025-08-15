@@ -1,4 +1,4 @@
-name: Telegram Admiral Monitor
+[name: Telegram Admiral Monitor
 
 on:
   schedule:
@@ -37,10 +37,10 @@ jobs:
           echo "Has TELETHON_SESSION? " $([ -n "${TELETHON_SESSION-}" ] && echo YES || echo NO)
           echo "Has GSHEET_NAME?      " $([ -n "${GOOGLE_SHEET_NAME-}" ] && echo YES || echo NO)
           echo "Has TZ?               " $([ -n "${TZ-}" ] && echo YES || echo NO)
-          python - <<PY
+          python - <<'PY'
 import json, sys
 try:
-    d=json.load(open("service_account.json"))
+    d = json.load(open("service_account.json"))
     print("Loaded service_account.json OK")
     print("service account email:", d.get("client_email","<missing>"))
 except Exception as e:
@@ -57,4 +57,4 @@ PY
           TZ: ${{ secrets.TZ }}
         run: |
           set -euo pipefail
-          python -u monitor_telegram_to_sheets.py
+          python -u monitor_telegram_to_sheets.py]
