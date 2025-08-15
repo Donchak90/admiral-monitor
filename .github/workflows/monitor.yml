@@ -1,4 +1,4 @@
-[name: Telegram Admiral Monitor
+name: Telegram Admiral Monitor
 
 on:
   schedule:
@@ -28,33 +28,37 @@ jobs:
         run: |
           echo '${{ secrets.SERVICE_ACCOUNT_JSON }}' > service_account.json
 
-      - name: Quick env check (names only)
-        shell: bash
+      - name: Quick env check
         run: |
-          set -euo pipefail
-          echo "Has API_ID?           " $([ -n "${API_ID-}" ] && echo YES || echo NO)
-          echo "Has API_HASH?         " $([ -n "${API_HASH-}" ] && echo YES || echo NO)
-          echo "Has TELETHON_SESSION? " $([ -n "${TELETHON_SESSION-}" ] && echo YES || echo NO)
-          echo "Has GSHEET_NAME?      " $([ -n "${GOOGLE_SHEET_NAME-}" ] && echo YES || echo NO)
-          echo "Has TZ?               " $([ -n "${TZ-}" ] && echo YES || echo NO)
+          echo "Has API_ID?            $([ -n \"${API_ID}\" ] && echo YES || echo NO)"
+          echo "Has API_HASH?          $([ -n \"${API_HASH}\" ] && echo YES || echo NO)"
+          echo "Has TELETHON_SESSION?  $([ -n \"${TELETHON_SESSION}\" ] && echo YES || echo NO)"
+          echo "Has GSHEET_NAME?       $([ -n \"${GOOGLE_SHEET_NAME}\" ] && echo YES || echo NO)"
+          echo "Has TZ?                $([ -n \"${TZ}\" ] && echo YES || echo NO)"
           python - <<'PY'
 import json, sys
 try:
-    d = json.load(open("service_account.json"))
+    with open("service_account.json") as f:
+        data = json.load(f)
     print("Loaded service_account.json OK")
-    print("service account email:", d.get("client_email","<missing>"))
+    print("Service account email:", data.get("client_email", "<missing>"))
 except Exception as e:
     print("FAILED to load service_account.json:", e)
     sys.exit(1)
 PY
-
-      - name: Run monitor (verbose)
         env:
           API_ID: ${{ secrets.API_ID }}
           API_HASH: ${{ secrets.API_HASH }}
           TELETHON_SESSION: ${{ secrets.TELETHON_SESSION }}
           GOOGLE_SHEET_NAME: ${{ secrets.GSHEET_NAME }}
           TZ: ${{ secrets.TZ }}
-        run: |
-          set -euo pipefail
-          python -u monitor_telegram_to_sheets.py]
+
+      - name: Run monitor
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          TELETHON_SESSION: ${{ secrets.TELETHON_SESSION }}
+          GOOGLE_SHEET_NAME: ${{ secrets.GSHEET_NAME }}
+          TZ: ${{ secrets.TZ }}
+        run: python -u monitor_telegram_to_sheets.py
+
