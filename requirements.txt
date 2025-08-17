@@ -1,0 +1,7 @@
+telethon
+python-dotenv
+gspread
+google-auth
+beautifulsoup4
+pytz
+requests
