@@ -1,0 +1,10 @@
+# Python junk
+__pycache__/
+*.pyc
+
+# Local envs
+.env
+.venv/
+
+# Do NOT commit secrets
+service_account.json
