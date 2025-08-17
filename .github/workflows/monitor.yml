@@ -1,0 +1,46 @@
+name: Telegram Admiral Monitor
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"   # запуск раз в 2 часа (UTC)
+  workflow_dispatch: {}      # кнопка "Run workflow" вручную
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Quick env check
+        run: |
+          echo "Has API_ID? ${{ secrets.API_ID != '' }}"
+          echo "Has API_HASH? ${{ secrets.API_HASH != '' }}"
+          echo "Has TELETHON_SESSION? ${{ secrets.TELETHON_SESSION != '' }}"
+          echo "Has SERVICE_ACCOUNT_JSON? ${{ secrets.SERVICE_ACCOUNT_JSON != '' }}"
+          echo "Has GSHEET_NAME? ${{ secrets.GSHEET_NAME != '' }}"
+          echo "Has TZ? ${{ secrets.TZ != '' }}"
+
+      - name: Create service_account.json
+        run: |
+          printf '%s' '${{ secrets.SERVICE_ACCOUNT_JSON }}' > service_account.json
+
+      - name: Run monitor
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          TELETHON_SESSION: ${{ secrets.TELETHON_SESSION }}
+          GOOGLE_SHEET_NAME: ${{ secrets.GSHEET_NAME }}
+          TZ: ${{ secrets.TZ }}
+        run: |
+          python monitor_telegram_to_sheets.py
