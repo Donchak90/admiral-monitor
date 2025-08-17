@@ -1,4 +1,4 @@
-import os, time, pytz, requests
+import os, time, pytz, requests, re
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 
@@ -33,7 +33,7 @@ channels = [
     "@besprokata", "@derzhiperedachu", "@hockeywithroman", "@erykalov_s_shaiboi"
 ]
 
-# --- расширенные фильтры по клубу/городу/фамилиям (регулярные выражения) ---
+# --- расширенные фильтры по клубу/городу/фамилиям ---
 TEAM_PATTERNS = [
     r"\bадмирал(ы|а|у|ом|е)?\b",
     r"\bморяк(и|ов|ам|ами|ах|а|у|ом|е)?\b",
@@ -78,27 +78,19 @@ NAME_PATTERNS = [
     r"\bМазитов(а|у|ым|е|ы|ам|ами|ах)?\b",
     r"\bКатаев(а|у|ым|е|ы|ам|ами|ах)?\b",
     r"\bГромов(а|у|ым|е|ы|ам|ами|ах)?\b",
-    r"\bКарас(?:ёв|ев)(а|у|ым|е|ы|ам|ами|ах)?\b",  # ё/е
+    r"\bКарас(?:ёв|ев)(а|у|ым|е|ы|ам|ами|ах)?\b",
 ]
 
 KEYWORD_PATTERNS = TEAM_PATTERNS + NAME_PATTERNS
 
 def contains_keywords(text: str) -> bool:
     t = text or ""
-    for p in KEYWORD_PATTERNS:
-        if re.search(p, t, flags=re.IGNORECASE):
-            return True
-    return False
+    return any(re.search(p, t, flags=re.IGNORECASE) for p in KEYWORD_PATTERNS)
 
-]
-
-def contains_keywords(text):
-    return any(kw.lower() in text.lower() for kw in keywords)
-
+# --- основной цикл ---
 async def main():
     tz = pytz.timezone(TZ)
     now = datetime.now(tz)
-    since = now - timedelta(days=1)
     to_add = []
 
     for ch in channels:
@@ -118,7 +110,6 @@ async def main():
             for msg in hist.messages:
                 if not msg.message:
                     continue
-                # фильтруем по ключевым словам
                 if contains_keywords(msg.message):
                     date_str = msg.date.astimezone(tz).strftime("%Y-%m-%d %H:%M")
                     to_add.append([
@@ -134,7 +125,6 @@ async def main():
             print(f"Ошибка на канале {ch}: {e}")
             continue
 
-    # пачками, чтобы не упереться в лимиты Google Sheets
     if to_add:
         for i in range(0, len(to_add), 300):
             batch = to_add[i:i+300]
@@ -144,7 +134,7 @@ async def main():
             except Exception as e:
                 print(f"❌ Ошибка при добавлении пачки {i//300 + 1}: {e}")
     else:
-        print("Нет новых совпадений по ключевым словам за последние ~50 сообщений в каналах.")
+        print("Нет новых совпадений по ключевым словам в последних 50 сообщениях.")
 
 if __name__ == "__main__":
     with client:
